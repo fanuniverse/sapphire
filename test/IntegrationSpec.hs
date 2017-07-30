@@ -33,7 +33,7 @@ spec = before_ flushdb $ with (app <$> redis) $ do
       replicateM_ 2 $ get "/update?remove=[\"tag\"]" `shouldRespondWith` 200
       get "/search?q=tag" `shouldRespondWith` "[]"
 
-  describe "searching" $ do
+  describe "searching the default bucket" $ do
     it "returns the results ordered by score" $ do
       replicateM_ 2 $ get "/update?add=[\"a tag\"]"
       replicateM_ 5 $ get "/update?add=[\"second tag\"]"
@@ -53,6 +53,28 @@ spec = before_ flushdb $ with (app <$> redis) $ do
       get "/search?q=re pe" `shouldRespondWith`
         "[[\"terrifying renegade pearl\",1]\
         \,[\"rebellious peridot\",1]]"
+
+  describe "searching different buckets" $ do
+    it "separates results by buckets" $
+      get "/update?add=[\"artist: aqueousy\"\
+        \,\"artist: aquatic trickster\"\
+        \,\"artist: aquacultural being\"\
+        \,\"aquamarine\"]" >>
+      get "/search?q=aqua" `shouldRespondWith`
+        "[[\"aquamarine\",1]]" >>
+      get "/search?q=artist: aqua" `shouldRespondWith`
+        "[[\"artist: aquatic trickster\",1]\
+        \,[\"artist: aquacultural being\",1]]"
+
+    it "can search by multiple prefixes inside a bucket" $
+      get "/update?add=[\"fandom: steven universe\"\
+        \,\"fandom: stationery unicorn\"\
+        \,\"fandom: staple unpicker\"]" >>
+      get "/search?q=st" `shouldRespondWith`
+        "[]" >>
+      get "/search?q=fandom: st uni" `shouldRespondWith`
+        "[[\"fandom: steven universe\",1]\
+        \,[\"fandom: stationery unicorn\",1]]"
 
   describe "encoding" $
     it "properly indexes unicode tags" $
