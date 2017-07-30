@@ -4,7 +4,7 @@ module Server (runServer, app) where
 
 import Retrieval (search)
 import Insertion (addTag, removeTag)
-import Strings (utf8ToString)
+import Strings (readUtf8List)
 
 import qualified Database.Redis as Redis
 
@@ -18,9 +18,7 @@ import Network.HTTP.Types (ok200, badRequest400)
 import Network.HTTP.Types.Header (hContentType)
 
 runServer :: IO ()
-runServer = do
-  redis <- Redis.checkedConnect Redis.defaultConnectInfo
-  run 3030 (app redis)
+runServer = run 3030 . app =<< Redis.checkedConnect Redis.defaultConnectInfo
 
 app :: Redis.Connection -> Application
 app redis request respond = respond =<<
@@ -38,7 +36,6 @@ app redis request respond = respond =<<
     _ ->
       return $ responseLBS badRequest400 [] ""
   where
-    listParam name = fromMaybe [] $
-      (read . utf8ToString) <$> (param name) :: [String]
+    listParam name = fromMaybe [] (readUtf8List <$> param name)
     param name = join $ lookup name (queryString request)
     jsonContentType = [(hContentType, "application/json;charset=utf-8")]

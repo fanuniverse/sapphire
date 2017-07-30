@@ -1,20 +1,12 @@
 module Insertion (DataModifier, addTag, removeTag) where
 
-import Strings (UTF8BString, (@+), stringToUtf8)
-
-import Database.Redis (Connection, runRedis, zincrby)
+import Strings (UTF8BString, (@+),
+  prefixesForTermsWithLength, splitIntoBucketAndTerms)
 
 import Control.Monad (forM_)
-import Data.List (inits)
-import Data.Set (Set)
-import qualified Data.Set as Set
+import Database.Redis (Connection, runRedis, zincrby)
 
-type DataModifier = String -> IO ()
-
-prefixes :: String -> Set UTF8BString
-prefixes = Set.map stringToUtf8 . Set.fromList . prefixList
-  where
-    prefixList = filter ((> 1) . length) . (inits =<<) . words
+type DataModifier = UTF8BString -> IO ()
 
 addTag :: Connection -> DataModifier
 addTag redis tag = changeScore redis tag 1
@@ -22,7 +14,10 @@ addTag redis tag = changeScore redis tag 1
 removeTag :: Connection -> DataModifier
 removeTag redis tag = changeScore redis tag (-1)
 
-changeScore :: Connection -> String -> Integer -> IO ()
-changeScore redis tag changeBy = runRedis redis $ forM_ (prefixes tag) update
+changeScore :: Connection -> UTF8BString -> Integer -> IO ()
+changeScore redis tag incrementBy = runRedis redis $ do
+  forM_ prefixes $ \prefix ->
+    zincrby (bucket @+ prefix) incrementBy tag
   where
-    update prefix = zincrby ("search:" @+ prefix) changeBy (stringToUtf8 tag)
+    prefixes = prefixesForTermsWithLength (>= 2) terms
+    (bucket, terms) = splitIntoBucketAndTerms tag
