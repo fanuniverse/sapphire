@@ -1,0 +1,90 @@
+-- This file has been generated from package.yaml by hpack version 0.17.0.
+--
+-- see: https://github.com/sol/hpack
+
+name:                sapphire
+version:             0.1.0
+synopsis:            A Redis-based ordered autocomplete service
+description:         See README at <https://github.com/fanuniverse/sapphire#readme>
+homepage:            https://github.com/fanuniverse/sapphire#readme
+bug-reports:         https://github.com/fanuniverse/sapphire/issues
+license:             OtherLicense
+license-file:        LICENSE
+maintainer:          little-bobby-tables <inky@fanuniverse.org>
+category:            Web
+build-type:          Simple
+cabal-version:       >= 1.10
+
+source-repository head
+  type: git
+  location: https://github.com/fanuniverse/sapphire
+
+library
+  hs-source-dirs:
+      src
+  default-extensions: OverloadedStrings
+  ghc-options: -Wall -O2
+  exposed-modules:
+      Insertion
+      Retrieval
+      Server
+      Strings
+  build-depends:
+      base >= 4.7 && < 5
+    , containers
+    , bytestring
+    , utf8-string
+    , hedis
+    , http-types
+    , warp
+    , wai
+    , aeson
+  default-language: Haskell2010
+
+executable sapphire
+  main-is: Main.hs
+  hs-source-dirs:
+      exec
+  default-extensions: OverloadedStrings
+  ghc-options: -Wall -O2
+  build-depends:
+      base >= 4.7 && < 5
+    , containers
+    , bytestring
+    , utf8-string
+    , hedis
+    , http-types
+    , warp
+    , wai
+    , aeson
+    , sapphire
+  default-language: Haskell2010
+
+test-suite spec
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  hs-source-dirs:
+      test
+      src
+  default-extensions: OverloadedStrings
+  ghc-options: -Wall -O2
+  build-depends:
+      base >= 4.7 && < 5
+    , containers
+    , bytestring
+    , utf8-string
+    , hedis
+    , http-types
+    , warp
+    , wai
+    , aeson
+    , hspec
+    , hspec-wai
+  other-modules:
+      IntegrationSpec
+      TestUtils
+      Insertion
+      Retrieval
+      Server
+      Strings
+  default-language: Haskell2010

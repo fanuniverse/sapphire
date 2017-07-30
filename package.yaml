@@ -1,0 +1,44 @@
+name: sapphire
+version: 0.1.0
+synopsis: A Redis-based ordered autocomplete service
+description: See README at <https://github.com/fanuniverse/sapphire#readme>
+maintainer: little-bobby-tables <inky@fanuniverse.org>
+license: OtherLicense
+github: fanuniverse/sapphire
+category: Web
+
+default-extensions:
+  - OverloadedStrings
+
+ghc-options: -Wall -O2
+
+dependencies:
+  - base >= 4.7 && < 5
+  - containers
+  - bytestring
+  - utf8-string
+  - hedis
+  - http-types
+  - warp
+  - wai
+  - aeson
+
+library:
+  source-dirs: src
+
+executables:
+  sapphire:
+    main: Main.hs
+    source-dirs: exec
+    dependencies:
+      - sapphire
+
+tests:
+  spec:
+    main: Spec.hs
+    source-dirs:
+      - test
+      - src
+    dependencies:
+      - hspec
+      - hspec-wai

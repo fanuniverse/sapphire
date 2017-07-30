@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+
+  redis-cli:
+    image: redis:4.0-alpine
+    depends_on:
+      - redis
+    command: redis-cli -h redis -p 6379 monitor
+
+  redis:
+    image: redis:4.0-alpine
+    ports:
+      - "localhost:6379:6379"
