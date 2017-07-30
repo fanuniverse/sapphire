@@ -17,34 +17,34 @@ spec = before_ flushdb $ with (app <$> redis) $ do
   describe "adding a new tag" $
     it "increments its score" $ do
       get "/search?q=tag" `shouldRespondWith` "[]"
-      get "/index?add=[\"tag\"]" `shouldRespondWith` 200
+      get "/update?add=[\"tag\"]" `shouldRespondWith` 200
       get "/search?q=tag" `shouldRespondWith` "[[\"tag\",1]]"
 
   describe "removing an existing tag" $ do
     it "decrements its score" $ do
-      replicateM_ 2 $ get "/index?add=[\"tag\"]"
+      replicateM_ 2 $ get "/update?add=[\"tag\"]"
       get "/search?q=tag" `shouldRespondWith` "[[\"tag\",2]]"
-      get "/index?remove=[\"tag\"]" `shouldRespondWith` 200
+      get "/update?remove=[\"tag\"]" `shouldRespondWith` 200
       get "/search?q=tag" `shouldRespondWith` "[[\"tag\",1]]"
 
     it "hides the tag once its score reaches 0" $ do
-      replicateM_ 2 $ get "/index?add=[\"tag\"]"
+      replicateM_ 2 $ get "/update?add=[\"tag\"]"
       get "/search?q=tag" `shouldRespondWith` "[[\"tag\",2]]"
-      replicateM_ 2 $ get "/index?remove=[\"tag\"]" `shouldRespondWith` 200
+      replicateM_ 2 $ get "/update?remove=[\"tag\"]" `shouldRespondWith` 200
       get "/search?q=tag" `shouldRespondWith` "[]"
 
   describe "searching" $ do
     it "returns the results ordered by score" $ do
-      replicateM_ 2 $ get "/index?add=[\"a tag\"]"
-      replicateM_ 5 $ get "/index?add=[\"second tag\"]"
-      replicateM_ 3 $ get "/index?add=[\"third tag\"]"
+      replicateM_ 2 $ get "/update?add=[\"a tag\"]"
+      replicateM_ 5 $ get "/update?add=[\"second tag\"]"
+      replicateM_ 3 $ get "/update?add=[\"third tag\"]"
       get "/search?q=tag" `shouldRespondWith`
         "[[\"second tag\",5],[\"third tag\",3],[\"a tag\",2]]"
           { matchStatus = 200
           , matchHeaders = ["Content-Type" <:> "application/json;charset=utf-8"] }
 
     it "can search by multiple prefixes" $
-      get "/index?add=[\"pearl\"\
+      get "/update?add=[\"pearl\"\
         \,\"revengeful\"\
         \,\"terrifying renegade pearl\"\
         \,\"rebellious peridot\"\
@@ -56,7 +56,7 @@ spec = before_ flushdb $ with (app <$> redis) $ do
 
   describe "encoding" $
     it "properly indexes unicode tags" $
-      get (stringToUtf8 "/index?add=[\"юникод\",\"юникод юникод\"]") >>
+      get (stringToUtf8 "/update?add=[\"юникод\",\"юникод юникод\"]") >>
       get (stringToUtf8 "/search?q=юни") `shouldRespondWith`
         "[[\"юникод юникод\",1]\
         \,[\"юникод\",1]]"
