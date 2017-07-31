@@ -1,9 +1,9 @@
 module TestUtils where
-  import qualified Database.Redis as Redis
 
-  redis :: IO Redis.Connection
-  redis = Redis.checkedConnect $ Redis.defaultConnectInfo
-    { Redis.connectDatabase = 16 }
+import qualified Database.Redis as Redis
 
-  flushdb :: IO ()
-  flushdb = redis >>= (flip Redis.runRedis) (Redis.flushdb) >> return ()
+redis :: IO Redis.Connection
+redis = Redis.checkedConnect $ Redis.defaultConnectInfo
+
+flushdb :: IO ()
+flushdb = redis >>= (flip Redis.runRedis) Redis.flushdb >> return ()
