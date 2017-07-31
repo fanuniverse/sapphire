@@ -21,6 +21,7 @@ dependencies:
   - http-types
   - warp
   - wai
+  - wai-extra
   - aeson
 
 library:

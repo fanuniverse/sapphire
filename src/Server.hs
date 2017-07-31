@@ -1,5 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
-
 module Server (runServer, app) where
 
 import Retrieval (search)
@@ -12,8 +10,9 @@ import Control.Monad (join, forM_)
 import Data.Maybe (fromMaybe)
 import Data.Aeson (encode)
 
-import Network.Wai (Application, pathInfo, queryString, responseLBS)
+import Network.Wai (Application, Request, pathInfo, queryString, responseLBS)
 import Network.Wai.Handler.Warp (run)
+import Network.Wai.Parse (parseRequestBody, lbsBackEnd)
 import Network.HTTP.Types (ok200, badRequest400)
 import Network.HTTP.Types.Header (hContentType)
 
@@ -23,19 +22,25 @@ runServer = run 3030 . app =<< Redis.checkedConnect Redis.defaultConnectInfo
 app :: Redis.Connection -> Application
 app redis request respond = respond =<<
   case pathInfo request of
-    "update":_ -> do
-      forM_ (listParam "add") (addTag redis)
-      forM_ (listParam "remove") (removeTag redis)
-      return $ responseLBS ok200 [] ""
-    "search":_ -> do
+    "update":_ ->
+      update redis request >> return (responseLBS ok200 [] "")
+    "search":_ ->
       case (param "q") of
         Just query -> search redis 10 query >>= \results ->
-          return $ responseLBS ok200 jsonContentType (encode results)
+          return (responseLBS ok200 [jsonContentType] (encode results))
         Nothing ->
-          return $ responseLBS badRequest400 [] ""
+          return (responseLBS badRequest400 [] "")
     _ ->
-      return $ responseLBS badRequest400 [] ""
+      return (responseLBS badRequest400 [] "")
   where
-    listParam name = fromMaybe [] (readUtf8List <$> param name)
     param name = join $ lookup name (queryString request)
-    jsonContentType = [(hContentType, "application/json;charset=utf-8")]
+    jsonContentType = (hContentType, "application/json;charset=utf-8")
+
+update :: Redis.Connection -> Request -> IO ()
+update redis request = go =<< parseRequestBody lbsBackEnd request
+  where
+    go (params, _) =
+      forM_ (listParam "add") (addTag redis) >>
+      forM_ (listParam "remove") (removeTag redis)
+      where
+        listParam name = fromMaybe [] (readUtf8List <$> (lookup name params))
