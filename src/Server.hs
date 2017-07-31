@@ -16,8 +16,11 @@ import Network.Wai.Parse (parseRequestBody, lbsBackEnd)
 import Network.HTTP.Types (ok200, badRequest400)
 import Network.HTTP.Types.Header (hContentType)
 
-runServer :: IO ()
-runServer = run 3030 . app =<< Redis.checkedConnect Redis.defaultConnectInfo
+runServer :: String -> IO ()
+runServer redisHost = run 3030 . app =<< redisConnection
+  where
+    redisConnection = Redis.checkedConnect Redis.defaultConnectInfo
+      { Redis.connectHost = redisHost }
 
 app :: Redis.Connection -> Application
 app redis request respond = respond =<<

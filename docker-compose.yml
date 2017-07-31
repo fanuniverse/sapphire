@@ -4,11 +4,20 @@ services:
 
   redis-cli:
     image: redis:4.0-alpine
+    command: redis-cli -h redis -p 6379 monitor
     depends_on:
       - redis
-    command: redis-cli -h redis -p 6379 monitor
+    networks:
+      - redis-network
 
   redis:
     image: redis:4.0-alpine
     ports:
       - "localhost:6379:6379"
+    networks:
+      - redis-network
+
+networks:
+
+  redis-network:
+    driver: bridge

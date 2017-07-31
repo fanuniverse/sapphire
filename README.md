@@ -41,6 +41,18 @@ curl -XPOST -d 'add=["tag three"]&remove=["tag four"]' localhost:3030/update
 
 Pull from [littlebobbytables/sapphire](https://hub.docker.com/r/littlebobbytables/sapphire/).
 
+There are several ways to connect the application to Redis:
+```bash
+# With an instance of Redis running on host's port 6379:
+docker run --net=host littlebobbytables/sapphire
+
+# With an instance of Redis running inside a Docker network on port 6379:
+docker run --network=network -p 3030:3030 -e REDIS_HOST=redis_host littlebobbytables/sapphire
+
+# You can try out the latter approach with Docker Compose (see docker-compose.yml):
+docker run --network=sapphire_redis-network -it -p 3030:3030 -e REDIS_HOST="redis" littlebobbytables/sapphire
+```
+
 ## Development
 
 ### Requirements
